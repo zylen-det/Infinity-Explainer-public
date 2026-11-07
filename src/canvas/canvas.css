@@ -1,0 +1,31 @@
+.canvas { position:relative; width:100%; height:100%; overflow:clip; touch-action:none; }
+.canvas__pane,.canvas__background { position:absolute; inset:0; }
+.canvas__pane { cursor:grab; }
+.canvas__pane:active { cursor:grabbing; }
+.canvas__background { pointer-events:none; }
+.canvas__viewport { position:absolute; inset:0; transform-origin:0 0; pointer-events:none; }
+.canvas__nodes { pointer-events:none; }
+.canvas__node { position:absolute; transform-origin:0 0; box-sizing:border-box; pointer-events:all; user-select:none; outline:none; }
+.canvas__node.draggable { cursor:grab; }
+.canvas__node.dragging { cursor:grabbing; }
+.canvas__edges { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+.canvas__edge { pointer-events:visibleStroke; }
+.canvas__viewport-portal { position:absolute; inset:0; pointer-events:none; user-select:none; }
+.canvas__selection { position:absolute; pointer-events:none; z-index:40; border:1px dotted var(--secondary); background:color-mix(in srgb,var(--secondary) 8%,transparent); }
+.canvas__resize-control { position:absolute; pointer-events:all; }
+.canvas__resize-control.left,.canvas__resize-control.right { cursor:ew-resize; }
+.canvas__resize-control.top,.canvas__resize-control.bottom { cursor:ns-resize; }
+.canvas__resize-control.top.left,.canvas__resize-control.bottom.right { cursor:nwse-resize; }
+.canvas__resize-control.top.right,.canvas__resize-control.bottom.left { cursor:nesw-resize; }
+.canvas__resize-control.handle { width:5px; height:5px; border:1px solid white; translate:-50% -50%; }
+.canvas__resize-control.handle.left { left:0; }
+.canvas__resize-control.handle.right { left:100%; }
+.canvas__resize-control.handle.top { top:0; }
+.canvas__resize-control.handle.bottom { top:100%; }
+.canvas__resize-control.line { border:0 solid var(--muted); }
+.canvas__resize-control.line.left,.canvas__resize-control.line.right { width:1px; height:100%; top:0; transform:translateX(-50%); border-left-width:1px; }
+.canvas__resize-control.line.left { left:0; }
+.canvas__resize-control.line.right { left:100%; }
+.canvas__resize-control.line.top,.canvas__resize-control.line.bottom { height:1px; width:100%; left:0; transform:translateY(-50%); border-top-width:1px; }
+.canvas__resize-control.line.top { top:0; }
+.canvas__resize-control.line.bottom { top:100%; }
