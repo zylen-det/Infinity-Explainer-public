@@ -106,3 +106,7 @@ belong in their integration repositories.
 ## License
 
 [MIT](LICENCE). Third-party packages retain their respective licenses.
+
+[Third-party licenses and notices](public/THIRD_PARTY_LICENSES.txt) include the
+full license texts and font terms. This file is copied into builds; preserve it
+when distributing the app and update it when dependencies change.
