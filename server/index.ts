@@ -2,7 +2,7 @@ import { createServer } from 'node:http'
 import { readFileSync, existsSync } from 'node:fs'
 import { dirname, extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { toNodeHandler } from '@modelcontextprotocol/node'
+import { localhostHostValidation, localhostOriginValidation, toNodeHandler } from '@modelcontextprotocol/node'
 import { CanvasStore } from './store.ts'
 import { createCanvasHttpHandler } from './http.ts'
 
@@ -15,8 +15,13 @@ const traceFile = resolve(process.env.MCP_TRACE_FILE ?? resolve(root, '.data/dia
 
 const mcp = createCanvasHttpHandler(store, undefined, traceFile)
 const handleMcp = toNodeHandler(mcp, { onerror: error => console.error('MCP request failed:', error.message) })
+const validateHost = localhostHostValidation()
+const validateOrigin = localhostOriginValidation()
 
 const httpServer = createServer(async (req, res) => {
+  // A matching Origin/Host pair is not proof of trust: both can name a domain
+  // rebound to loopback. Validate Host independently, before serving any route.
+  if (!validateHost(req, res)) return
   const url = new URL(req.url ?? '/', 'http://localhost')
   if (url.pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end(JSON.stringify({
@@ -25,10 +30,9 @@ const httpServer = createServer(async (req, res) => {
     return
   }
   if (url.pathname === '/mcp') {
+    if (!validateOrigin(req, res)) return
     const origin = req.headers.origin
-    let sameOrigin = false
-    try { sameOrigin = !!origin && new URL(origin).host === req.headers.host } catch { /* Invalid origin. */ }
-    if (origin && !sameOrigin && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    if (origin && !/^https?:\/\//i.test(origin)) {
       res.writeHead(403).end('Origin not allowed')
       return
     }

@@ -58,6 +58,11 @@ personal local use. Canvas snapshots written through MCP are stored separately
 under `.data/canvases`; the standalone UI currently uses browser local storage.
 They are **not automatically synchronized**.
 
+The HTTP server accepts only `localhost`, `127.0.0.1`, or `[::1]` Host headers.
+Browser MCP requests must independently have a loopback HTTP(S) Origin;
+non-browser clients may omit Origin. Changing the listen address with `HOST`
+does not disable these checks or authorize another hostname.
+
 For an integration that controls the UI, implement the `CanvasHost` contract in
 [`src/services/CanvasHost.ts`](src/services/CanvasHost.ts) and call
 `configureCanvasHost` before mounting the app. The shared UI then delegates
