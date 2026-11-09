@@ -131,6 +131,22 @@ button:focus-visible, .explainer-card:focus-visible { outline:2px solid var(--te
 .selection-popover { box-sizing:border-box; flex-wrap:wrap; overflow:auto; position:fixed; z-index:35; display:flex; gap:4px; padding:5px; border:1px solid var(--card-border); border-radius:12px; background:var(--float); box-shadow:0 13px 37px #0000003b; }
 .selection-popover button { border:0; border-radius:7px; background:transparent; padding:9px 12px; color:var(--text); font-size:12px; white-space:nowrap; }
 .selection-popover button:hover { background:var(--card); }
+.selection-actions > button { display:flex; align-items:center; justify-content:center; gap:6px; }
+.selection-actions > button svg { width:16px; height:16px; flex-shrink:0; }
+.selection-actions-preview { display:none; }
+@media (max-width:700px), (hover:none) and (pointer:coarse) {
+  .selection-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); width:min(440px,calc(100vw - var(--app-safe-left) - var(--app-safe-right) - 24px)); gap:6px; padding:8px; border-radius:22px; box-shadow:0 8px 32px #0000001f,0 2px 6px #0000000a; }
+  .selection-actions-preview { grid-column:1/-1; display:flex; align-items:center; gap:12px; min-width:0; padding:0 4px 6px 8px; border-bottom:1px solid var(--card-border); margin-bottom:2px; }
+  .selection-actions-quote { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.5; color:var(--secondary); }
+  .selection-actions-preview button { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; padding:0; border-radius:50%; color:var(--secondary); }
+  .selection-actions-preview svg { width:14px; height:14px; }
+  .selection-actions > button { flex-direction:column; gap:5px; min-height:60px; padding:8px 2px; border-radius:14px; font-size:11px; font-weight:550; line-height:1.3; -webkit-tap-highlight-color:transparent; }
+  .selection-actions > button svg { width:20px; height:20px; }
+  .selection-actions > .selection-explain { background:var(--text); color:var(--float); }
+  .selection-actions > .selection-explain:hover { background:var(--secondary); }
+  .selection-actions > button:active { opacity:.7; }
+  .app:has(.selection-actions) .canvas-controls { visibility:hidden; }
+}
 .focus-body { white-space:pre-wrap; font-size:17px; line-height:1.95; color:var(--secondary); }
 .wordlist-status { display:flex; align-items:center; gap:6px; margin-top:4px; font-size:11px; color:var(--muted); }
 .wordlist-status .loading-spinner { width:10px; height:10px; }
