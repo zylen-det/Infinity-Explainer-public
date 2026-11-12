@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 1254 1254" fill="none">
+  <title>Infinity Explainer</title>
+  <rect width="1254" height="1254" fill="#000"/>
+  <g stroke="#fff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="240" y="180" width="773" height="790" rx="72"/>
+    <path d="M-64 257H371a61 61 0 0 1 61 61V602a61 61 0 0 1-61 61H-64"/>
+    <rect x="327" y="394" width="366" height="100" rx="28"/>
+    <path d="M499 599H882M369 728H690"/>
+    <path d="M1318 694H875a80 80 0 0 0-80 80V998a80 80 0 0 0 80 80H1318"/>
+  </g>
+</svg>
