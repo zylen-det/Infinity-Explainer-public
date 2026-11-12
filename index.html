@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Infinity Explainer</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<meta name="description" content="An infinite canvas for exploring ideas with AI. Follow your curiosity. Keep the context.">
+<style>
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{background:#000;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:#000;color:#fff;font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.hero{position:relative;height:100svh;min-height:560px;overflow:hidden}
+.grid{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.13) 1.2px,transparent 1.6px);background-size:28px 28px;animation:drift 90s linear infinite}
+@keyframes drift{to{background-position:280px 140px}}
+.ghost{position:absolute;border:2.5px solid rgba(255,255,255,.06);border-radius:8px;animation:float 38s ease-in-out infinite alternate}
+@keyframes float{to{transform:translate(46px,-34px)}}
+#stage{position:absolute;inset:0;width:100%;height:100%}
+.fg{position:absolute;z-index:1;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,90vw);text-align:center}
+.fg h1{text-shadow:0 4px 18px #000,0 0 32px #000,0 0 56px #000,0 0 100px rgba(0,0,0,.95);margin:0 0 34px;font-size:clamp(36px,6.5vw,64px);font-weight:600;letter-spacing:-.03em;line-height:1.08}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:min(380px,100%);margin:0 auto;padding:15px 26px;border:1px solid #fff;border-radius:999px;font-size:clamp(16px,2vw,18px);font-weight:500;text-decoration:none;box-shadow:0 10px 30px rgba(0,0,0,.9),0 0 0 6px rgba(0,0,0,.35);transition:background-color .15s,border-color .15s}
+.btn.p{background:#fff;color:#000}
+.btn.g{background:#1c1c1e;color:#fff;border-color:#1c1c1e;box-shadow:0 10px 30px rgba(0,0,0,.9),0 0 0 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07)}
+
+.btn:focus-visible,.foot a:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.btn svg{flex:none}
+.btn.p:hover{background:#e4e4e4;border-color:#e4e4e4}
+.btn.g:hover{background:#2c2c2f;border-color:#2c2c2f}
+.or{margin:14px 0;font-size:13px;opacity:.55;text-shadow:0 0 12px #000}
+.hint{position:absolute;left:50%;bottom:20px;margin-left:-9px;opacity:.4;z-index:1}
+.info{max-width:820px;margin:0 auto;padding:20vh 24px 4vh}
+.info h2{margin:0 0 20px;font-size:clamp(32px,5vw,56px);font-weight:600;letter-spacing:-.025em}
+.info p{margin:0 0 16vh;font-size:clamp(22px,3vw,32px);line-height:1.45;letter-spacing:-.015em}
+.foot{padding:0 24px 48px;text-align:center;font-size:14px;opacity:.55}
+.foot a{color:#fff}
+</style>
+</head>
+<body>
+<section class="hero" id="hero">
+  <div class="grid"></div>
+  <div class="ghost" style="left:6%;top:66%;width:11%;height:16%"></div>
+  <div class="ghost" style="left:68%;top:8%;width:9%;height:12%;animation-delay:-12s"></div>
+  <div class="ghost" style="left:86%;top:58%;width:12%;height:18%;animation-delay:-20s"></div>
+  <div class="ghost" style="left:30%;top:84%;width:10%;height:12%;animation-delay:-6s"></div>
+  <svg id="stage" aria-hidden="true"></svg>
+  <div class="fg">
+    <h1>Infinity Explainer</h1>
+    <a class="btn p" href="https://chatgpt.com/">Try it in ChatGPT</a>
+    <div class="or">or</div>
+    <a class="btn g" href="https://github.com/zylen-det/Infinity-Explainer-public">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      Try it locally with your own LLM
+    </a>
+  </div>
+  <svg class="hint" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+</section>
+
+<main class="info">
+  <h2># What is this</h2>
+  <p>Infinity Explainer replaces the chat thread with an infinite canvas. Every answer is a card. Select any words inside a card, ask about them, and a new card grows from exactly that spot, joined by a thin line. Pan around, zoom out to see how your questions branch, zoom in to keep reading.</p>
+  <h2># Why</h2>
+  <p>In a normal chat, one confusing word means a follow-up message, and the answer lands at the bottom, far from what you were reading. The context scrolls away. Here, each explanation stays beside the words that raised it, so the path through an idea stays visible.</p>
+</main>
+<footer class="foot"><a href="https://github.com/zylen-det/Infinity-Explainer-public">GitHub</a></footer>
+
+<script>
+(()=>{
+const NS='http://www.w3.org/2000/svg',svg=document.getElementById('stage'),hero=document.getElementById('hero');
+const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let run=0,lastW=0;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+async function play(id){
+  const W=innerWidth,H=hero.clientHeight,cx=W/2,cy=H/2;lastW=W;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.replaceChildren();
+  const g=document.createElementNS(NS,'g');svg.appendChild(g);g.style.transformOrigin=cx+'px '+cy+'px';
+  const mk=(t,a,p=g)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+  const sl=ms=>new Promise((ok,no)=>setTimeout(()=>id===run?ok():no(),rm?0:ms));
+  const an=(e,kf,d,delay=0,ease='ease-out')=>e.animate(kf,{duration:rm?0:d,delay:rm?0:delay,fill:'forwards',easing:ease});
+  const hid='stroke-dasharray:1;stroke-dashoffset:1',O=.24,SW=3;
+  const dr=(e,d,dl)=>an(e,[{strokeDashoffset:1},{strokeDashoffset:0}],d,dl);
+  const fd=(e,d,dl)=>an(e,[{opacity:0},{opacity:1}],d,dl);
+  const gr=o=>{const v=Math.round(o*255);return'rgb('+v+','+v+','+v+')'};
+  const path=(d,o,w,p=g)=>mk('path',{d,fill:'none',stroke:gr(o),'stroke-width':w,pathLength:1,style:hid},p);
+  const sh=(t,a,p=g)=>mk(t,Object.assign({fill:'none',stroke:gr(.3),'stroke-width':2.5,pathLength:1,style:hid},a),p);
+  const row=(P,x,y,l,anc)=>{const e=path('M'+x+' '+y+'h'+l,RO,SW,P);let a=null;
+    if(anc){const aw=Math.min(48,l*.4);a={x:x+l,y,el:mk('rect',{x:x+l-aw,y:y-6,width:aw,height:12,fill:gr(.55),style:'opacity:0'},P)}}
+    return{e,a}};
+  let RO=.5;const cr=[];const tw=(d,f)=>new Promise(res=>{if(rm){f(1);return res()}const t0=performance.now(),s=t=>{if(id!==run)return res();const k=Math.min(1,(t-t0)/d),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;f(e);k<1?requestAnimationFrame(s):res()};requestAnimationFrame(s)});
+  const ap=(els,st=80,b=0)=>els.forEach((e,i)=>dr(e,400,b+i*st));
+
+  /* sun = chat window = first card */
+  const cw=Math.min(420,W*.86),hs=282,wx=cx-cw/2,wy=cy-hs/2,x0=wx+16,wd=cw-32,gp=18,vh=hs-44;
+  const R1x=Math.max(W*.34,cw/2+70),R1y=Math.max(H*.34,hs/2+70),R2x=R1x*1.32,R2y=R1y*1.28;
+  const defs=mk('defs',{},svg),cp=mk('clipPath',{id:'cp'},defs);const cr0=mk('rect',{x:wx,y:0,width:cw,height:H-84},cp);
+  
+  const sun=sh('rect',{x:wx,y:-10,width:cw,height:H+20,rx:10});
+  const clip=mk('g',{'clip-path':'url(#cp)'}),cg=mk('g',{},clip),ch=mk('g',{},cg),late=mk('g',{},cg),ch2=mk('g',{});
+  const asst=(y,n,anc,P=cg)=>{const els=[sh('circle',{cx:x0+6,cy:y,r:6},ch)],rows=[];
+    for(let i=0;i<n;i++){const a=anc.includes(i),r=row(P,x0+22,y+i*gp,(wd-22)*(a?rnd(.45,.65):i===n-1?rnd(.3,.5):rnd(.8,1)),a);els.push(r.e);cr.push(r.e);rows.push(r)}
+    return{els,rows}};
+  const user=y=>{const bw=wd*.6;return[sh('rect',{x:x0+wd-bw,y,width:bw,height:30,rx:15},ch),path('M'+(x0+wd-bw+16)+' '+(y+15)+'h'+bw*.45,O,SW,ch)]};
+  const A1=asst(wy+24,5,[2,4]),U1=user(wy+118),A2=asst(wy+172,4,[1,3]);
+  const lt=[];for(let yy=wy+248,k=0;yy<H+520;k++){lt.push(...user(yy));const n=k%2?3:5,B=asst(yy+54,n,[],late);lt.push(...B.els);yy+=54+(n-1)*gp+26}
+  const ht=[];for(let hy=wy-4,k=0;hy>-90;k++){if(k%2===0){hy-=30;ht.push(...user(hy))}else{hy-=3*gp;ht.push(...asst(hy,4,[],late).els)}hy-=26}
+  const S=[A1.rows[2].a,A1.rows[4].a,A2.rows[1].a,A2.rows[3].a];
+  const inp=[sh('rect',{x:x0,y:H-72,width:wd,height:24,rx:12},ch2),path('M'+(x0+14)+' '+(H-60)+'h60',.2,SW,ch2),sh('circle',{cx:x0+wd-12,cy:H-60,r:6},ch2)];
+
+  RO=O;/* planets */
+  const placed=[{x:wx,y:wy,w:cw,h:hs,s:1}],sz=Math.max(90,Math.min(170,W*.11));
+  const ov=(a,b,p)=>a.x<b.x+b.w+p&&a.x+a.w+p>b.x&&a.y<b.y+b.h+p&&a.y+a.h+p>b.y;
+  const place=(rx,ry,k)=>{for(let t=0;t<80;t++){const w=sz*k*rnd(.85,1.35),h=sz*k*rnd(1.1,1.45),an_=rnd(0,6.283),s=rnd(.93,1.07),
+    r={x:cx+Math.cos(an_)*rx*s-w/2,y:cy+Math.sin(an_)*ry*s-h/2,w,h};
+    if(r.x<12||r.y<12||r.x+r.w>W-12||r.y+r.h>H-12||placed.some(q=>ov(r,q,q.s?26:14)))continue;placed.push(r);return r}return null};
+  const card=(r,anc)=>{const c={r,rows:[],anch:{}},x1=r.x+14,w2=r.w-28,ys=[];
+    c.box=sh('rect',{x:r.x,y:r.y,width:r.w,height:r.h,rx:8});c.title=path('M'+x1+' '+(r.y+24)+'h'+w2*.5,.4,5.5);
+    for(let y=r.y+50;y<r.y+r.h-10;y+=16)ys.push(y);
+    ys.forEach((y,i)=>{const a=anc.includes(i),q=row(g,x1,y,w2*(a?rnd(.5,.7):i===ys.length-1?rnd(.3,.5):rnd(.8,1)),a);c.rows.push(q.e);if(q.a)c.anch[i]=q.a});
+    return c};
+  const fill=c=>{dr(c.box,600);dr(c.title,400,150);c.rows.forEach((e,i)=>dr(e,380,250+i*70))};
+  const th=async(a,r)=>{const pts=[[r.x,r.y+24],[r.x+r.w,r.y+24],[r.x+r.w/2,r.y],[r.x+r.w/2,r.y+r.h]];let b=pts[0],m=1e9;
+    pts.forEach(p=>{const d=Math.hypot(p[0]-a.x,p[1]-a.y);if(d<m){m=d;b=p}});
+    const k=(Math.random()<.5?-1:1)*.16,qx=(a.x+b[0])/2-(b[1]-a.y)*k,qy=(a.y+b[1])/2+(b[0]-a.x)*k;
+    const p=path('M'+a.x+' '+a.y+'Q'+qx+' '+qy+' '+b[0]+' '+b[1],.4,2.5),dot=mk('circle',{cx:b[0],cy:b[1],r:4,fill:gr(.5),style:'opacity:0'});
+    await dr(p,650).finished;fd(dot,200)};
+  const r1=[[1],[0,2],[1],[0,2]].map(a=>{const r=place(R1x,R1y,1);return r&&card(r,a)}).filter(Boolean);
+  const pa=r1.flatMap(c=>Object.values(c.anch));
+  const r2=pa.map(a=>{const r=place(R2x,R2y,.85);return r&&{a,c:card(r,[])}}).filter(Boolean);
+
+  try{
+    /* 1. traditional chat: attention drifts away as it scrolls */
+    dr(sun,800);ap(inp,100);ap(ht,25,100);ap(A1.els,60,400);ap(U1,100,800);ap(A2.els,60,1000);ap(lt,20,1200);await sl(2300);
+    fd(S[0].el,250);await sl(900);
+    an(cg,[{transform:'translateY(0px)'},{transform:'translateY(-200px)'}],800,0,'ease-in-out');await sl(1000);
+    an(cg,[{transform:'translateY(-200px)'},{transform:'translateY(-480px)'}],900,0,'ease-in-out');await sl(1700);
+    /* 2. rewind: the anchor is still there, chat chrome falls away */
+    an(cg,[{transform:'translateY(-480px)'},{transform:'translateY(0px)'}],1000,0,'ease-in-out');await sl(1100);
+    an(ch,[{opacity:1},{opacity:0}],700);an(ch2,[{opacity:1},{opacity:0}],700);cr.forEach(e=>an(e,[{stroke:gr(.5)},{stroke:gr(O)}],900));
+    await tw(1000,e=>{const L=(a,b)=>a+(b-a)*e;sun.setAttribute('y',L(-10,wy));sun.setAttribute('height',L(H+20,hs));cr0.setAttribute('y',L(0,wy+2));cr0.setAttribute('height',L(H-84,vh))});await sl(300);
+    /* 3. planets grow in rings */
+    an(g,[{transform:'scale(1)'},{transform:'scale(.92)'}],8000,0,'ease-in-out');
+    for(let i=0;i<r1.length;i++){if(i)fd(S[i].el,250);await sl(300);await th(S[i],r1[i].r);fill(r1[i]);await sl(250)}
+    
+    for(const q of r2){fd(q.a.el,250);await sl(150);await th(q.a,q.c.r);fill(q.c);await sl(150)}
+    if(rm)return;
+    await sl(3000);an(g,[{opacity:1},{opacity:0}],1000);await sl(1300);play(id);
+  }catch(e){}
+}
+const start=()=>{run++;play(run)};
+start();
+let t;addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{if(innerWidth!==lastW)start()},250)});
+})();
+</script>
+</body>
+</html>
