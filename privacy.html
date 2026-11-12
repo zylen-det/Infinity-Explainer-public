@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy — Infinity Explainer</title>
+<meta name="description" content="How Infinity Explainer handles canvas content, account identifiers, storage, sharing, and deletion.">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="stylesheet" href="./policy.css">
+</head>
+<body><div class="wrap">
+<header><a class="brand" href="./">Infinity Explainer</a><nav aria-label="Site navigation"><a href="./">Home</a><a href="./terms.html">Terms of service</a><a href="https://github.com/zylen-det/Infinity-Explainer-public/issues">Support</a></nav></header>
+<main>
+<h1>Privacy policy</h1>
+<p class="meta">Publisher: zylen · Last updated: November 12, 2026</p>
+<p>This policy describes the Infinity Explainer plugin in ChatGPT and this public website. The separate, self-hosted version is described below. Infinity Explainer turns explanations into connected cards on a canvas.</p>
+<h2>Information handled by the plugin</h2>
+<ul>
+<li><strong>Canvas content:</strong> card titles and text, explanations, selected text and its context, clickable terms, card connections, and content you import. This may include personal information if you put it in a canvas.</li>
+<li><strong>Canvas state:</strong> canvas and card identifiers, revision numbers, request identifiers, pending or error states, card positions and sizes, and the saved viewport.</li>
+<li><strong>Account identity:</strong> the authenticated user identifier supplied by ChatGPT Sites, used to associate saved canvases with their owner. The sign-in flow requests the openid, resource.invoke, and email scopes. The canvas database uses the owner identifier; it does not store an email-address field.</li>
+<li><strong>Technical information:</strong> requests pass through hosting and authentication providers, which may process network addresses, browser information, security cookies, and operational logs under their own policies. The canvas interface also keeps limited diagnostic events in memory, including identifiers, status, and error information; diagnostic context may be included in communications with ChatGPT.</li>
+</ul>
+<h2>How information is used and shared</h2>
+<p>Canvas information is used to create, display, edit, save, reopen, import, and export your canvas. Account identity is used to check ownership. Technical information supports authentication, security, synchronization, and troubleshooting.</p>
+<p>Saved canvases are stored in Cloudflare D1 through ChatGPT Sites. OpenAI processes sign-in, plugin tool calls, tool results, and the conversation in ChatGPT. Selecting text for a question can send that selection and surrounding card text to ChatGPT as context. The plugin receives the arguments supplied to its tools; connecting it does not itself give it unrestricted access to your entire chat history.</p>
+<p>When realtime updates are enabled, the update service receives an opaque canvas channel and revision notifications; the canvas text is retrieved separately through the authenticated plugin. The ChatGPT plugin does not independently call a separate language-model API to generate your answers.</p>
+<p>Information you choose to post to GitHub Issues is public and is processed by GitHub. Exported files are downloaded to the location you choose and are outside the plugin's storage controls.</p>
+<h2>Retention and availability</h2>
+<p>The current canvas service has no scheduled expiry for saved canvases. Content remains in the active saved canvas until you edit, replace, or delete it, or the service's stored data is removed. There is no promised storage duration, backup service, or guarantee that saved data will remain available.</p>
+<p>You can export an importable JSON copy from the canvas interface while the service and your canvas are accessible. Keep your own copies of anything you want to preserve. Revoking access to the plugin does not automatically delete its saved canvas records.</p>
+<p>Diagnostic events held only in the interface's memory are lost when that document is discarded. Retention of hosting logs, security records, provider backups, and ChatGPT conversations is governed separately by the relevant provider's policies; deleting a card is not a request to erase those systems.</p>
+<h2>Your controls and deletion</h2>
+<p>You can edit or delete cards in the canvas interface. Deleting cards removes their text and corresponding layout entries from the active saved canvas. Importing a canvas replaces the current saved cards and layout. These actions do not erase copies already exported, posted publicly, or retained in your ChatGPT conversation.</p>
+<p>The current plugin does not provide a whole-canvas or account-data deletion tool. Removing every card leaves an empty canvas record and its ownership identifier. Disconnecting the plugin and deleting your ChatGPT conversation are separate actions with separate effects.</p>
+<p>For general privacy questions, open a <a href="https://github.com/zylen-det/Infinity-Explainer-public/issues">GitHub issue</a> without including personal information. GitHub Issues is public and is not a private deletion-request channel. Do not post canvas contents, account identifiers, passwords, tokens, or other confidential information there.</p>
+<h2>This website</h2>
+<p>The public information and policy pages are hosted on GitHub Pages. These pages do not add advertising trackers, analytics scripts, sign-in forms, or canvas storage. GitHub may process request and security information to deliver the website.</p>
+<h2>Self-hosted use</h2>
+<p>If you run the open-source app yourself, canvas content and model settings, including any API key you configure, can be stored in your browser's local storage. Prompts and selected context are sent to the model endpoint you select. An optional local MCP server stores canvases and diagnostic traces on its host. You control those installations, files, providers, and their retention; they are separate from the hosted ChatGPT plugin. Clear local storage and remove local files to remove those local copies.</p>
+<h2>Provider policies</h2>
+<p>For their own services, see the <a href="https://openai.com/policies/privacy-policy/">OpenAI Privacy Policy</a>, <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare Privacy Policy</a>, and <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a>.</p>
+<h2>Updates</h2>
+<p>Changes to this policy will appear on this page with an updated date. Check this page for the current description of the service's data practices.</p>
+</main>
+<footer>Infinity Explainer · Published by zylen · <a href="./terms.html">Terms of service</a> · <a href="https://github.com/zylen-det/Infinity-Explainer-public/issues">GitHub Issues</a></footer>
+</div></body></html>
