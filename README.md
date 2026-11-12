@@ -110,3 +110,5 @@ belong in their integration repositories.
 [Third-party licenses and notices](public/THIRD_PARTY_LICENSES.txt) include the
 full license texts and font terms. This file is copied into builds; preserve it
 when distributing the app and update it when dependencies change.
+See the [notice reconciliation inventory](docs/license-updates.md) for the added
+package versions, license text sources, and update procedure.

@@ -32,3 +32,6 @@ allowed adapter version remains in the lockfile.
 Use the README's build, type, unit, and browser checks after changes. A clean
 audit only describes known advisories for the resolved versions; it does not
 replace those checks or a review of application behavior. 
+
+When production dependencies change, also reconcile third-party notices using
+the [license inventory and update procedure](license-updates.md).
