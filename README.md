@@ -15,6 +15,11 @@ npm ci
 npm run dev
 ```
 
+The development server listens on localhost by default. To expose it on all
+IPv4 network interfaces (`0.0.0.0`), run
+`npm run dev -- --host 0.0.0.0`. The shorthand `npm run dev -- --host` listens
+on all available network interfaces, including IPv6 where supported.
+
 Open <http://localhost:5173>. In Settings, enter an OpenAI-compatible model
 endpoint, model name, and API key if required. A local model server can keep
 inference on your machine. The app sends requests directly from your browser;

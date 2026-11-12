@@ -19,10 +19,6 @@ export default defineConfig({
     },
   },
 
-  server: {
-    host: '0.0.0.0',
-    cors: true,
-  },
   build: {
     rolldownOptions: { input: { app: 'index.html' } },
   },
