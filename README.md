@@ -79,15 +79,6 @@ included yet. This release provides the shared UI and tool foundation for them.
 
 ## Develop
 
-The GitHub Pages landing page lives separately in `landing/` and is published
-from the root of the `gh-pages` branch. The root `index.html` remains the canvas
-app entry. After committing landing page updates, publish them with:
-
-```sh
-git push origin main
-git subtree push --prefix landing origin gh-pages
-```
-
 - `src/`: React UI, D3 canvas, reading, editing, and optional host interface.
 - `shared/`: canvas and layout contracts.
 - `server/`: generic MCP tools, operations, and local file storage.
