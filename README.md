@@ -6,6 +6,10 @@ An infinite canvas for exploring ideas with AI. Expand a term or selected passag
 into a connected explanation card, follow the concepts inside it, and keep your
 reading path visible.
 
+[![Watch the Infinity Explainer demo](assets/demo-preview.jpg)](https://github.com/zylen-det/Infinity-Explainer-public/blob/main/assets/demo.mp4)
+
+[Watch the demo video](https://github.com/zylen-det/Infinity-Explainer-public/blob/main/assets/demo.mp4).
+
 ## Run locally
 
 Requires **Node.js 24+** and npm.
