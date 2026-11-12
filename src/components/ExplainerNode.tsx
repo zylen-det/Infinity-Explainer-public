@@ -458,6 +458,8 @@ function ExplainerNode({
   /* ---- Render ---- */
   const isError = data.status === "error";
   const isLoading = data.status === "loading";
+  const title = data.text.match(/^【(.+?)】/)?.[1];
+  const body = data.text.replace(/^【.+?】\s*/, "");
 
   useEffect(() => {
     const shortcut = (event: KeyboardEvent) => {
@@ -518,7 +520,8 @@ function ExplainerNode({
 
 
       <div
-        className="card-content"
+        className={`card-content${isLoading ? " is-loading" : ""}`}
+        aria-busy={isLoading}
         ref={contentRef}
         data-node-root={id}
         style={{
@@ -526,7 +529,7 @@ function ExplainerNode({
           width: "100%",
           height: "100%",
           overflow: "auto",
-          margin: data.text.trim() || editing ? "5px" : 0,
+          margin: !isLoading && (data.text.trim() || editing) ? "5px" : 0,
         }}
       >
         {editing && !reading.activeId ? (
@@ -536,41 +539,6 @@ function ExplainerNode({
           </>
         ) : (
           <>
-            {isLoading && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 3,
-                  background: "var(--card-border)",
-                  borderRadius: "12px 12px 0 0",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: "30%",
-                    height: "100%",
-                    background:
-                      "linear-gradient(90deg, var(--muted), var(--text), var(--muted))",
-                    backgroundSize: "200% 100%",
-                    animation: "ie-shimmer 1.5s ease-in-out infinite",
-                    borderRadius: "0 0 12px 12px",
-                  }}
-                />
-              </div>
-            )}
-
-            {isLoading && isHosted && (
-              <button onClick={() => {
-                void hostService.cancelWait(id).catch(error => {
-                  canvas.updateNodeData(id, { status: 'error', errorMessage: error.message });
-                });
-              }} style={{ marginBottom: 8 }}>停止等待</button>
-            )}
-
             {isError && (
               <div
                 style={{
@@ -607,27 +575,33 @@ function ExplainerNode({
               </div>
             )}
 
-            {isLoading &&
-            data.text.trim() ===
-              `【${data.text.match(/^【(.+?)】/)?.[1] ?? ""}】` ? (
-              <div style={{ color: "var(--secondary)", fontStyle: "italic" }}>
-                等待解釋生成…
+            {title && <h2 className="card-title">{title}</h2>}
+            {isLoading && (
+              <div className="card-loading-status" role="status">
+                <span className="loading-spinner" aria-hidden="true" />
+                <span>Preparing explanation…</span>
               </div>
-            ) : null}
-
-            {data.text.match(/^【(.+?)】/) && <h2 className="card-title">{data.text.match(/^【(.+?)】/)?.[1]}</h2>}
+            )}
+            {isLoading && !body.trim() && (
+              <div className="card-loading-skeleton" aria-hidden="true">
+                <span /><span /><span />
+              </div>
+            )}
             {!data.text.trim() && !isLoading && <button className="empty-card-hint nodrag nopan" onPointerDown={e => e.stopPropagation()} onClick={() => { setEditText(''); setEditing(true); }}>Tap to edit</button>}
-            <div className="nodrag nopan" onPointerDown={e => e.stopPropagation()}><MarkdownContent text={data.text.replace(/^【.+?】\s*/, '')} /></div>
+            {body.trim() && <div className="card-explanation nodrag nopan" onPointerDown={e => e.stopPropagation()}><MarkdownContent text={body} /></div>}
+            {isLoading && isHosted && (
+              <div className="card-loading-footer nodrag nopan" onPointerDown={e => e.stopPropagation()}>
+                <button className="card-stop-waiting" onClick={() => {
+                  void hostService.cancelWait(id).catch(error => {
+                    canvas.updateNodeData(id, { status: 'error', errorMessage: error.message });
+                  });
+                }}>Stop waiting</button>
+              </div>
+            )}
           </>
         )}
       </div>
 
-      <style>{`
-        @keyframes ie-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(400%); }
-        }
-      `}</style>
     </div>
   );
 }

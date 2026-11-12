@@ -166,6 +166,27 @@ button:focus-visible, .explainer-card:focus-visible { outline:2px solid var(--te
 
 .card-title { margin:0 0 14px; color:var(--text); font-size:18px; line-height:1.45; letter-spacing:-.035em; font-weight:640; overflow-wrap:anywhere; }
 
+/* Loading cards keep the topic and explanation in the same reading order. */
+.card-content.is-loading { display:flex; flex-direction:column; gap:0; }
+.card-content.is-loading .card-title { flex-shrink:0; margin-bottom:12px; }
+.card-loading-status { display:flex; align-items:center; gap:8px; flex-shrink:0; color:var(--secondary); font-size:12px; line-height:20px; }
+.card-loading-status .loading-spinner { box-sizing:border-box; width:12px; height:12px; flex-shrink:0; border-width:1.5px; }
+.card-loading-skeleton { display:flex; flex-direction:column; gap:12px; flex-shrink:0; padding:20px 0 8px; }
+.card-loading-skeleton span { display:block; height:8px; border-radius:4px; background:var(--text); opacity:.06; }
+.card-loading-skeleton span:nth-child(1) { width:92%; }
+.card-loading-skeleton span:nth-child(2) { width:100%; }
+.card-loading-skeleton span:nth-child(3) { width:64%; }
+.card-explanation { animation:explanation-appear 180ms ease-out; }
+.card-content.is-loading .card-explanation { margin-top:16px; }
+.card-loading-footer { display:flex; justify-content:flex-end; flex-shrink:0; margin-top:auto; padding-top:16px; }
+.card-stop-waiting { border:0; border-radius:8px; padding:4px 8px; background:transparent; color:var(--secondary); font-size:12px; line-height:20px; transition:color 160ms ease-out,background-color 160ms ease-out; }
+.card-stop-waiting:hover { background:var(--bg); color:var(--text); }
+@keyframes explanation-appear { from { opacity:0; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) {
+  .loading-spinner,.card-explanation { animation:none; }
+  .card-stop-waiting { transition:none; }
+}
+
 .explainer-card { cursor:grab; }
 .explainer-card:active { cursor:grabbing; }
 .card-content .nodrag { cursor:text; user-select:text; }
