@@ -22,11 +22,33 @@ IPv4 network interfaces (`0.0.0.0`), run
 `npm run dev -- --host 0.0.0.0`. The shorthand `npm run dev -- --host` listens
 on all available network interfaces, including IPv6 where supported.
 
-Open <http://localhost:5173>. In Settings, enter an OpenAI-compatible model
-endpoint, model name, and API key if required. A local model server can keep
-inference on your machine. The app sends requests directly from your browser;
-the endpoint must allow requests from the app's origin. Include `/v1` in the base
-URL when required; the app appends `/chat/completions`.
+Open <http://localhost:5173>. In Settings, select a provider and enter its model
+ID and API key. Requests and streaming use [Vercel AI SDK](https://ai-sdk.dev/docs/introduction)
+and its maintained provider adapters. The app includes:
+
+- Native adapters: OpenAI, Anthropic, Google Gemini, DeepSeek, Mistral, Groq, xAI, Cohere.
+- OpenAI-compatible connections: OpenRouter, Ollama, llama.cpp, LiteLLM Gateway,
+  and any custom OpenAI-compatible endpoint (including LM Studio or vLLM).
+
+Leave Endpoint empty to use the selected provider's default, or enter an API
+base URL to override it. Model IDs are entered explicitly; placeholders are examples,
+not a model catalog. Existing OpenAI and llama.cpp settings are preserved. Changing
+provider clears the endpoint, model, and key so credentials are not sent to a different
+service by accident. OpenAI uses the Chat Completions API for compatibility with
+existing endpoints; Anthropic and Gemini use their native protocols.
+
+The app sends requests directly from your browser, so the endpoint must allow
+requests from the app's origin (CORS). Anthropic requests include its direct-browser
+access header. A provider adapter does not bypass a service's browser restrictions.
+For services that require a server, you can run
+[LiteLLM Proxy](https://docs.litellm.ai/docs/simple_proxy) separately and select
+LiteLLM Gateway with its base URL, model alias, and gateway key. LiteLLM handles
+upstream credentials and provides access to its broader provider catalog; no
+Python service is required for direct connections. This app does not start or
+configure that gateway for you.
+
+For compatible endpoints, include `/v1` in the base URL when required; the SDK
+appends `/chat/completions`. A local model server can keep inference on your machine.
 For llama.cpp, use a client address such as `http://127.0.0.1:8001/v1`
 (`0.0.0.0` is a server bind address). The maximum generation budget defaults to
 8192 tokens and can be changed in Settings to fit your model/server limits.

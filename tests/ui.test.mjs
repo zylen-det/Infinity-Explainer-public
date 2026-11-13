@@ -820,7 +820,18 @@ test('settings persist custom appearance and local LLM configuration; controls c
     assert.equal(await settings.getByRole('textbox', { name: `${name} HEX`, exact: true }).inputValue(), '#445566')
     await settings.getByLabel(name, { exact: true }).fill(value)
   }
-  await settings.getByLabel('服務 Provider').selectOption('openai')
+  const providerSelect = settings.getByLabel('服務 Provider')
+  assert.equal(await providerSelect.locator('option').count(), 14)
+  await providerSelect.selectOption('anthropic')
+  assert.equal(await settings.getByLabel('Endpoint', { exact: true }).getAttribute('placeholder'), 'https://api.anthropic.com/v1')
+  await settings.getByLabel('API Key', { exact: true }).fill('test-provider-key')
+  await settings.getByLabel('Endpoint', { exact: true }).fill('https://proxy.example/v1')
+  await settings.getByLabel('Model', { exact: true }).fill('custom-model')
+  await providerSelect.selectOption('google')
+  for (const field of ['Endpoint', 'Model', 'API Key']) {
+    assert.equal(await settings.getByLabel(field, { exact: true }).inputValue(), '', 'switching provider clears provider-specific values')
+  }
+  await providerSelect.selectOption('openai')
   await settings.getByLabel('Endpoint', { exact: true }).fill('https://example.com/v1')
   await settings.getByLabel('Model', { exact: true }).fill('test-model')
   await settings.getByRole('button', { name: '儲存', exact: true }).click()
@@ -918,5 +929,48 @@ test('settings persist custom appearance and local LLM configuration; controls c
   assert.equal(await toggle.isDisabled(), false)
   assert.equal(await toggle.getAttribute('aria-pressed'), 'true')
   assert.notEqual(await page.locator('.canvas__edges').evaluate(el => getComputedStyle(el).display), 'none')
+  assert.deepEqual(errors, [])
+})
+
+test('browser model generation streams through AI SDK into a connected explanation card', async t => {
+  const base = await startVite(t)
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined) })
+  t.after(() => browser.close())
+  const page = await browser.newPage({ viewport: { width: 1100, height: 800 } })
+  const errors = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.addInitScript(() => {
+    localStorage.setItem('infinity-explainer-llm-config', JSON.stringify({
+      provider: 'openai-compatible', endpoint: 'https://models.example/v1', model: 'test-model', apiKey: '', maxTokens: 8192,
+    }))
+    localStorage.setItem('infinity-explainer-canvas', JSON.stringify({ format: 'infinity-explainer-rf',
+      nodes: [{ id: 'source', type: 'explainer', position: { x: 80, y: 100 }, width: 360, height: 240,
+        data: { text: '【來源】\n\n**測試原文**', terms: [], userTerms: [], status: 'idle', w: 360, h: 240 } }],
+      edges: [], viewport: { x: 0, y: 0, zoom: 1 },
+    }))
+  })
+  let requestBody
+  await page.route('https://models.example/v1/chat/completions', async route => {
+    requestBody = route.request().postDataJSON()
+    const events = [
+      { delta: { reasoning_content: '隱藏思考' }, finish_reason: null },
+      { delta: { content: '瀏覽器生成成功\n---TERMS---\n["術語"]' }, finish_reason: null },
+      { delta: {}, finish_reason: 'stop' },
+    ]
+    await route.fulfill({ contentType: 'text/event-stream', body: events.map(choice => 'data: ' + JSON.stringify({ choices: [choice] }) + '\n\n').join('') })
+  })
+  await page.goto(base)
+  const source = page.locator('[data-node-id="source"] .markdown-content strong')
+  await source.waitFor()
+  await source.evaluate(el => {
+    const range = document.createRange(); range.selectNodeContents(el)
+    const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range)
+  })
+  await page.getByRole('button', { name: '↗ Explain', exact: true }).click()
+  await eventually(async () => (await page.locator('.explainer-card .markdown-content').allTextContents()).some(text => text.includes('瀏覽器生成成功')))
+  assert.equal(requestBody.model, 'test-model')
+  assert.equal(requestBody.stream, true)
+  assert.equal(requestBody.max_tokens, 8192)
+  assert.doesNotMatch(await page.locator('.canvas').innerText(), /隱藏思考|---TERMS---/)
   assert.deepEqual(errors, [])
 })

@@ -1,16 +1,13 @@
 import { useCallback, useState } from 'react'
 import type { LLMConfig } from '../core/types'
+import { LLM_PROVIDERS, type LLMProvider } from '../core/llmProviders'
 
 interface Props {
   config: LLMConfig
   onSave: (cfg: LLMConfig) => void
 }
 
-const PROVIDER_OPTIONS: { value: LLMConfig['provider']; label: string }[] = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'llama.cpp', label: 'llama.cpp (local)' },
-  { value: 'disabled', label: 'Disabled' },
-]
+const PROVIDER_OPTIONS = Object.entries(LLM_PROVIDERS)
 
 export function LLMConfigPanel({ config, onSave }: Props) {
   const [form, setForm] = useState<LLMConfig>({ ...config })
@@ -21,6 +18,7 @@ export function LLMConfigPanel({ config, onSave }: Props) {
   }, [form, onSave])
 
   const isDisabled = form.provider === 'disabled'
+  const provider = LLM_PROVIDERS[form.provider]
 
   return (
     <section className="llm-settings" onChange={() => setSaved(false)}>
@@ -34,9 +32,11 @@ export function LLMConfigPanel({ config, onSave }: Props) {
         </label>
         <select id="llm-provider"
           value={form.provider}
-          onChange={(e) =>
-            setForm({ ...form, provider: e.target.value as LLMConfig['provider'] })
-          }
+          onChange={(e) => {
+            const next = e.target.value as LLMProvider
+            // Keep credentials and endpoint overrides scoped to their provider.
+            setForm({ ...form, provider: next, endpoint: '', model: '', apiKey: '' })
+          }}
           style={{
             width: '100%',
             padding: '6px 8px',
@@ -47,8 +47,8 @@ export function LLMConfigPanel({ config, onSave }: Props) {
             color: 'var(--text)',
           }}
         >
-          {PROVIDER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+          {PROVIDER_OPTIONS.map(([value, opt]) => (
+            <option key={value} value={value}>
               {opt.label}
             </option>
           ))}
@@ -64,7 +64,7 @@ export function LLMConfigPanel({ config, onSave }: Props) {
           value={form.endpoint}
           onChange={(e) => setForm({ ...form, endpoint: e.target.value })}
           disabled={isDisabled}
-          placeholder={form.provider === 'llama.cpp' ? 'http://127.0.0.1:8080/v1' : 'https://api.openai.com/v1'}
+          placeholder={provider.endpoint || 'https://your-provider.example/v1'}
           style={{
             width: '100%',
             padding: '6px 8px',
@@ -76,6 +76,7 @@ export function LLMConfigPanel({ config, onSave }: Props) {
             boxSizing: 'border-box',
           }}
         />
+        <p style={{ fontSize: 12, marginTop: 6 }}>留空使用此 Provider 的預設位址；自訂位址請填 API base URL。</p>
       </div>
 
       <div style={{ marginBottom: 12 }}>
@@ -87,7 +88,7 @@ export function LLMConfigPanel({ config, onSave }: Props) {
           value={form.model}
           onChange={(e) => setForm({ ...form, model: e.target.value })}
           disabled={isDisabled}
-          placeholder={form.provider === 'llama.cpp' ? 'qwen3.5-9b' : 'gpt-4o-mini'}
+          placeholder={provider.model || 'model-id'}
           style={{
             width: '100%',
             padding: '6px 8px',
@@ -110,7 +111,7 @@ export function LLMConfigPanel({ config, onSave }: Props) {
           value={form.apiKey}
           onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
           disabled={isDisabled}
-          placeholder={form.provider === 'openai' ? 'sk-...' : '(optional)'}
+          placeholder={['llama.cpp', 'ollama', 'openai-compatible', 'litellm'].includes(form.provider) ? '(optional)' : 'API Key'}
           style={{
             width: '100%',
             padding: '6px 8px',
@@ -138,6 +139,10 @@ export function LLMConfigPanel({ config, onSave }: Props) {
         />
         <p style={{ fontSize: 12, marginTop: 6 }}>思考與正文共用此額度；預設 8192，上限取決於模型與伺服器。</p>
       </div>
+
+      {!isDisabled && <p style={{ fontSize: 12, marginBottom: 16 }}>
+        直接從瀏覽器連接，Endpoint 須允許跨來源請求（CORS）。API Key 儲存在此瀏覽器；也可透過 LiteLLM Gateway 連接更多服務。
+      </p>}
 
       {saved && <p role="status">LLM 設定已儲存</p>}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

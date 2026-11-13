@@ -1,4 +1,5 @@
 import type { SelectionAnchor } from './selectionAnchor'
+import type { LLMProvider } from './llmProviders'
 /* ===== Data Types ===== */
 
 export interface TextSegment {
@@ -13,7 +14,7 @@ export interface ExplanationResult {
 }
 
 export interface LLMConfig {
-  provider: 'openai' | 'llama.cpp' | 'disabled'
+  provider: LLMProvider
   model: string
   endpoint: string
   apiKey: string

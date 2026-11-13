@@ -237,3 +237,28 @@ production package/version pairs with the `=== package@version ===` notice headi
 For new or changed packages, retain their exact copyright, LICENSE, COPYING, and
 NOTICE text. Review README and upstream sources when a tarball omits those files.
 Keep bundled font terms and existing supplements when updating the inventory.
+
+## AI SDK provider integration
+
+The provider integration adds the following production package versions. Full
+license and notice text is retained in the public notice file.
+
+| Package and version | Declared license | License text source |
+| --- | --- | --- |
+| `@ai-sdk/anthropic@4.0.103` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/cohere@4.0.82` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/deepseek@3.0.85` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/gateway@4.0.144` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/google@4.0.119` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/groq@4.0.82` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/mistral@4.0.85` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/openai@4.0.116` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/openai-compatible@3.0.91` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/provider@4.0.38` | Apache-2.0 | Packaged LICENSE |
+| `@ai-sdk/xai@5.0.44` | Apache-2.0 | Packaged LICENSE |
+| `@standard-schema/spec@1.1.0` | MIT | Packaged LICENSE |
+| `@vercel/oidc@3.2.0` | Apache-2.0 | Packaged LICENSE |
+| `@workflow/serde@4.1.0` | Apache-2.0 | Packaged LICENSE.md |
+| `ai@7.0.171` | Apache-2.0 | Packaged LICENSE |
+| `json-schema@0.4.0` | (AFL-2.1 OR BSD-3-Clause) | Packaged LICENSE |
+| `@ai-sdk/provider-utils@5.0.80` | Apache-2.0 | [Upstream license supplement](https://raw.githubusercontent.com/vercel/ai/%40ai-sdk%2Fprovider-utils%405.0.80/LICENSE) (package omits LICENSE) |

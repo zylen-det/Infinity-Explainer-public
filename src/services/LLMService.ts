@@ -1,4 +1,7 @@
+import { generateText, streamText } from 'ai'
 import type { ILLMService, LLMConfig, ExplanationResult } from '../core/types'
+import { isLLMProvider } from '../core/llmProviders.ts'
+import { createLanguageModel } from './LLMProvider.ts'
 
 const DEFAULT_CONFIG: LLMConfig = {
   provider: 'disabled',
@@ -13,7 +16,10 @@ const STORAGE_KEY = 'infinity-explainer-llm-config'
 function loadConfig(): LLMConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return { ...DEFAULT_CONFIG, ...JSON.parse(raw) } as LLMConfig
+    if (raw) {
+      const config = { ...DEFAULT_CONFIG, ...JSON.parse(raw) } as LLMConfig
+      if (isLLMProvider(config.provider)) return config
+    }
   } catch { /* ignore */ }
   return { ...DEFAULT_CONFIG }
 }
@@ -27,6 +33,9 @@ function requireAnswer(content: string, finishReason?: string | null): string {
     throw new Error(content.trim()
       ? '模型已達生成 token 上限，正文尚未完成。請在 LLM 設定提高「最大生成 tokens」後重試。'
       : '模型已達生成 token 上限，但尚未回傳正文。思考與正文共用生成額度，請在 LLM 設定提高「最大生成 tokens」後重試。')
+  }
+  if (finishReason && !['stop', 'tool-calls'].includes(finishReason)) {
+    throw new Error(`模型未完成回覆（${finishReason}），請重試或檢查模型設定。`)
   }
   if (content.trim()) return content
   throw new Error('模型沒有回傳正文（content）。請確認模型與伺服器的回覆格式；思考內容不會作為解釋顯示。')
@@ -211,35 +220,14 @@ export class LLMService implements ILLMService {
       }
     }
 
-    const prompt = buildJSONPrompt(term, context)
-    const { endpoint, model, apiKey } = this.config
-
-    const response = await fetch(`${endpoint}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: '你是一個技術知識助手。請以繁體中文回覆。' },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.3,
-        max_tokens: this.config.maxTokens ?? DEFAULT_CONFIG.maxTokens,
-        stream: false,
-      }),
+    const { text, finishReason } = await generateText({
+      model: await createLanguageModel(this.config),
+      system: '你是一個技術知識助手。請以繁體中文回覆。',
+      prompt: buildJSONPrompt(term, context),
+      maxOutputTokens: this.config.maxTokens ?? DEFAULT_CONFIG.maxTokens,
+      maxRetries: 0,
     })
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`LLM API error (${response.status}): ${errText}`)
-    }
-
-    const data = await response.json()
-    const choice = data.choices?.[0]
-    return parseResult(requireAnswer(choice?.message?.content ?? '', choice?.finish_reason))
+    return parseResult(requireAnswer(text, finishReason))
   }
 
   /** 串流：先顯示解釋文字，串流結束後解析 technical_terms */
@@ -255,75 +243,30 @@ export class LLMService implements ILLMService {
       return { explanation: msg, technical_terms: [] }
     }
 
-    const prompt = buildStreamPrompt(term, context)
-    const { endpoint, model, apiKey } = this.config
-
-    const response = await fetch(`${endpoint}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: '你是一個技術知識助手。請以繁體中文回覆。' },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.3,
-        max_tokens: this.config.maxTokens ?? DEFAULT_CONFIG.maxTokens,
-        stream: true,
-      }),
-      signal,
+    signal?.throwIfAborted()
+    const result = streamText({
+      model: await createLanguageModel(this.config),
+      system: '你是一個技術知識助手。請以繁體中文回覆。',
+      prompt: buildStreamPrompt(term, context),
+      maxOutputTokens: this.config.maxTokens ?? DEFAULT_CONFIG.maxTokens,
+      maxRetries: 0,
+      abortSignal: signal,
+      // Errors are propagated below; avoid the SDK's default console logging.
+      onError: () => {},
     })
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`LLM API error (${response.status}): ${errText}`)
-    }
-
-    const reader = response.body!.getReader()
-    const decoder = new TextDecoder()
     let accumulated = ''
-    let buffer = ''
-    let finishReason: string | null | undefined
-    const consumeLine = (line: string) => {
-      const trimmed = line.trim()
-      if (!trimmed.startsWith('data:')) return
-      const payload = trimmed.slice(5).trim()
-      if (!payload || payload === '[DONE]') return
-      let json
-      try {
-        json = JSON.parse(payload)
-      } catch {
-        return // Ignore malformed SSE data, not errors from onProgress.
-      }
-      const choice = json.choices?.[0]
-      if (choice?.finish_reason) finishReason = choice.finish_reason
-      const delta = choice?.delta?.content
-      if (typeof delta === 'string' && delta) {
-        accumulated += delta
+    let finishReason: string | undefined
+    for await (const part of result.fullStream) {
+      signal?.throwIfAborted()
+      if (part.type === 'error') throw part.error
+      if (part.type === 'abort') throw new DOMException('生成已取消', 'AbortError')
+      if (part.type === 'text-delta') {
+        accumulated += part.text
         onProgress(extractDisplayText(accumulated))
       }
+      if (part.type === 'finish') finishReason = part.finishReason
     }
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      buffer += decoder.decode(value, { stream: true })
-
-      // SSE: "data: {...}\n\n"
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
-
-      for (const line of lines) consumeLine(line)
-    }
-
-    // Some servers close the stream without a final newline.
-    buffer += decoder.decode()
-    if (buffer.trim()) consumeLine(buffer)
-
+    signal?.throwIfAborted()
     return parseResult(requireAnswer(accumulated, finishReason))
   }
 }
