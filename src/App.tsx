@@ -42,6 +42,15 @@ function InnerApp({ children }: { children?: ReactNode }) {
     document.documentElement.dataset.theme = light ? 'light' : 'dark'
   }, [light])
 
+  // Keep local canvas tabs in sync with changes to saved appearance preferences.
+  useEffect(() => {
+    const sync = (event: StorageEvent) => {
+      if (event.key === 'infinity-appearance' || event.key === 'infinity-theme' || event.key === null) setAppearance(loadAppearance())
+    }
+    window.addEventListener('storage', sync)
+    return () => window.removeEventListener('storage', sync)
+  }, [])
+
   const handleAppearanceChange = (next: Appearance) => {
     setAppearance(next)
     localStorage.setItem('infinity-appearance', JSON.stringify(next))
