@@ -92,18 +92,17 @@ Browser MCP requests must independently have a loopback HTTP(S) Origin;
 non-browser clients may omit Origin. Changing the listen address with `HOST`
 does not disable these checks or authorize another hostname.
 
-For an integration that controls the UI, implement the `CanvasHost` contract in
-[`src/services/CanvasHost.ts`](src/services/CanvasHost.ts) and call
-`configureCanvasHost` before mounting the app. The shared UI then delegates
-generation and persistence to that adapter instead of using the local provider.
-See [integration boundaries](docs/integration.md).
+The reusable `App` accepts optional UI callbacks and child controls. They have no
+network, authentication, account, or platform implementation. The default app
+continues to use browser storage and its locally configured model provider.
+See [UI reuse](docs/integration.md).
 
 A one-command agent launcher and browser-to-agent follow-up transport are not
 included yet. This release provides the shared UI and tool foundation for them.
 
 ## Develop
 
-- `src/`: React UI, D3 canvas, reading, editing, and optional host interface.
+- `src/`: React UI, D3 canvas, reading, editing, and UI callback types.
 - `shared/`: canvas and layout contracts.
 - `server/`: generic MCP tools, operations, and local file storage.
 - `tests/`: reading and browser checks.

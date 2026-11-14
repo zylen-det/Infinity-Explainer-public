@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const ignored = new Set(['.git', 'node_modules', 'dist', '.data'])
-const forbidden = new Set(['.openai', 'sites', 'hosting.json', '.app.json', 'HostService.ts'])
+const forbidden = new Set(['.openai', 'sites', 'hosting.json', '.app.json', 'HostService.ts', 'CanvasHost.ts', 'HostCanvas.tsx', 'HostLayoutService.ts', 'HostTransferService.ts', 'HttpCanvasHost.ts', 'cloud.ts'])
 const patterns = [
   /appgprj_[a-zA-Z0-9]{10,}/,
   /plugin_asdk_[a-zA-Z0-9_]{10,}/,
@@ -24,6 +24,7 @@ async function walk(directory) {
     if (!/\.(?:[cm]?[jt]sx?|json|md|css|html|ya?ml)$/.test(basename(path))) continue
     const text = await readFile(path, 'utf8')
     checked++
+    if (relative(root, path).startsWith('src/') && /\b(?:isHosted|hostService|configureCanvasHost)\b/.test(text)) problems.push(relative(root, path) + ': integration runtime in shared UI')
     if (patterns.some(pattern => pattern.test(text))) problems.push(relative(root, path) + ': private identifier or credential pattern')
   }
 }

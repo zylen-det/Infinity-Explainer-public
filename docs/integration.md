@@ -1,48 +1,36 @@
-# Integration boundaries
+# Reusing the canvas UI
 
-The public core owns card data, layout, selection anchors, rendering, editing,
-local persistence, model-provider requests, and generic MCP operations. It can
-build and run without any private integration repository.
+This repository is a local application and the source of reusable canvas UI.
+It contains no remote storage client, account authorization, conversation bridge,
+or platform bootstrap. Such implementations belong to the consuming application.
 
-An adapter owns its platform's conversation bridge, authentication, hosted
-storage, resource presentation metadata, deployment configuration, and review
-materials. It imports this package; the core never imports an adapter.
+`App` accepts optional `behavior` callbacks and children, rendered inside its
+canvas providers. `CanvasBehavior` contains only UI actions: create, edit, delete,
+import, selected-text questions, generation, and cancellation. Defaults retain
+the local browser persistence, streaming provider and model settings. A caller
+can supply manual persistence or document updates without adding transport code
+to this repository. Child controls use the same canvas store as the shared UI.
 
-## Browser entry
+```tsx
+import App from '@infinity-explainer/core/app'
+import '@infinity-explainer/core/src/index.css'
 
-```ts
-import { configureCanvasHost } from '@infinity-explainer/core/runtime'
-
-configureCanvasHost(myHost)
-await import('@infinity-explainer/core/mount')
+root.render(<App />)
 ```
 
-Implement `CanvasHost` to supply authoritative snapshots, subscriptions, writes,
-follow-up generation, and layout persistence. `questionHint` tells users where to
-continue an Ask action. Optional layout-state hooks support platform-local caches;
-the adapter's durable snapshots remain authoritative. No platform global is read
-by the shared UI. Without configuration, the standalone app uses its own model
-provider and browser storage.
+The package exposes source files. Consumers bundle TSX and CSS and deduplicate
+React, React DOM, and CodeMirror state/view when combining separate checkouts.
+Include `src/hybrid-markdown.d.ts` in a consumer TypeScript project for the editor
+dependency declarations.
 
-The package exports source files for integration builds. Install this checkout's
-own dependencies before consuming it through a local `file:` link. Include
-`node_modules/@infinity-explainer/core/src/hybrid-markdown.d.ts` in a consumer
-TypeScript project to load the editor dependency declarations. The consumer
-must bundle the TSX entry and CSS, and deduplicate React, React DOM, and CodeMirror
-state/view when combining dependencies from separate checkouts.
+The local MCP tools persist file snapshots independently from browser storage.
+They do not automatically synchronize the local browser app. Any transport or
+service connecting them is implemented outside this repository.
 
-## MCP entry
+## Repository boundary
 
-`server/mcp.ts` exports the shared factory. Without widget HTML, all operations
-are available to the calling model and no UI resource is registered. With HTML,
-it exposes the standard MCP Apps resource and app-only editing actions.
-
-Adapters may supply instructions and render/resource metadata. When linked
-checkouts contain separate SDK copies, pass the transport's `McpServer` constructor
-as `serverClass`; the SDK transport uses constructor identity during dispatch.
-Keep platform-specific metadata in the adapter rather than adding it to the core.
-
-MCP snapshots and standalone browser storage are separate. An agent-controlled
-browser experience needs a real adapter connecting them, including a supported
-way to deliver browser follow-ups back to a running agent. A skill alone cannot
-wake an agent after its execution has ended.
+- Keep local browser persistence, user-selected model providers, and shared canvas UI here.
+- Keep Sites/plugin adapters, HTTP storage, host lifecycle and snapshot synchronization, authentication, pairing, conversation providers, polling, platform controls, deployment and submission materials in the consuming repository.
+- Consumers depend on this package; this package never depends on private code.
+- Reuse these components through UI props, callbacks and children instead of copying a second canvas UI. Callback types do not contain endpoints, credentials, account scopes or host protocols.
+- Run `npm run check:public`, local tests and the build when changing this boundary. The inventory check complements source review; absence of private IDs alone does not make an adapter suitable for this repo.
