@@ -11,7 +11,8 @@ import { CardSurface } from "./CardSurface";
 import { CardActions } from './CardActions';
 import { getClickableTerms } from "../core/types";
 import { termRegistry, llmService } from "../core/services";
-import { hostService, isHosted } from '../services/CanvasHost';
+import { useCanvasBehavior } from '../canvas/behavior';
+import type { ILLMService } from '../core/types';
 import type { SelectionAnchor } from '../core/selectionAnchor';
 import { createId } from '../core/createId';
 import { traceCanvas } from '../services/CanvasTrace';
@@ -100,6 +101,9 @@ function ExplainerNode({
   height?: number;
 }) {
   const canvas = useCanvas();
+  const behavior = useCanvasBehavior();
+  const manualResults = behavior.resultUpdates === 'manual';
+  const explainStream = useMemo<ILLMService['explainStream']>(() => behavior.explain ?? llmService.explainStream.bind(llmService), [behavior.explain]);
   const reading = useReadingMode();
   const [loadingTerm, setLoadingTerm] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -138,14 +142,14 @@ function ExplainerNode({
   const handleSaveEdit = useCallback(async () => {
     try {
       if (editText !== data.text) {
-        if (isHosted) await hostService.saveBlock(id, editText);
+        await behavior.onSaveCard?.(id, editText);
         canvas.updateNodeData(id, { text: editText, errorMessage: '' });
       }
       setEditing(false);
     } catch (error) {
       canvas.updateNodeData(id, { errorMessage: error instanceof Error ? error.message : String(error) });
     }
-  }, [canvas, id, editText, data.text]);
+  }, [canvas, id, editText, data.text, behavior]);
 
   const handleCancelEdit = useCallback(() => { setEditing(false); setEditText(''); }, []);
 
@@ -283,10 +287,10 @@ function ExplainerNode({
       const targetId = newId;
 
       try {
-        const result = await llmService.explainStream(
+        const result = await explainStream(
           term,
           (fullText) => {
-            if (abort.signal.aborted || isHosted) return;
+            if (abort.signal.aborted || manualResults) return;
             canvas.setNodes((nds) =>
               nds.map((n) =>
                 n.id === targetId
@@ -299,7 +303,7 @@ function ExplainerNode({
           srcData.text,
           { blockId: targetId, parentId: id, selection },
         );
-        if (abort.signal.aborted || isHosted) return;
+        if (abort.signal.aborted || manualResults) return;
 
         canvas.setNodes((nds) =>
           nds.map((n) =>
@@ -322,7 +326,7 @@ function ExplainerNode({
         traceCanvas('explain-error', { blockId: targetId, error: err instanceof Error ? err.message : String(err) });
         canvas.setNodes((nds) =>
           nds.map((n) =>
-            n.id === targetId && (!isHosted || n.data.status === "loading")
+            n.id === targetId && (!manualResults || n.data.status === "loading")
               ? {
                   ...n,
                   data: {
@@ -341,7 +345,7 @@ function ExplainerNode({
         }
       }
     },
-    [id, canvas],
+    [id, canvas, explainStream, manualResults],
   );
 
   /* ---- Error Retry ---- */
@@ -365,10 +369,10 @@ function ExplainerNode({
 
     setLoadingTerm(term);
     try {
-      const result = await llmService.explainStream(
+      const result = await explainStream(
         term,
         (fullText) => {
-          if (abort.signal.aborted || isHosted) return;
+          if (abort.signal.aborted || manualResults) return;
           canvas.setNodes((nds) =>
             nds.map((n) =>
               n.id === id
@@ -381,7 +385,7 @@ function ExplainerNode({
         data.parentId ? String(canvas.getNode(data.parentId)?.data.text ?? '') : '',
         { blockId: id, parentId: data.parentId ?? null },
       );
-      if (abort.signal.aborted || isHosted) return;
+      if (abort.signal.aborted || manualResults) return;
 
       canvas.setNodes((nds) =>
         nds.map((n) =>
@@ -404,7 +408,7 @@ function ExplainerNode({
       traceCanvas('explain-error', { blockId: id, error: err instanceof Error ? err.message : String(err) });
       canvas.setNodes((nds) =>
         nds.map((n) =>
-          n.id === id && (!isHosted || n.data.status === "loading")
+          n.id === id && (!manualResults || n.data.status === "loading")
             ? {
                 ...n,
                 data: {
@@ -420,7 +424,7 @@ function ExplainerNode({
     } finally {
       if (!abort.signal.aborted) setLoadingTerm(null);
     }
-  }, [id, data.text, data.parentId, canvas]);
+  }, [id, data.text, data.parentId, canvas, explainStream, manualResults]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -589,10 +593,10 @@ function ExplainerNode({
             )}
             {!data.text.trim() && !isLoading && <button className="empty-card-hint nodrag nopan" onPointerDown={e => e.stopPropagation()} onClick={() => { setEditText(''); setEditing(true); }}>Tap to edit</button>}
             {body.trim() && <div className="card-explanation nodrag nopan" onPointerDown={e => e.stopPropagation()}><MarkdownContent text={body} /></div>}
-            {isLoading && isHosted && (
+            {isLoading && behavior.onCancel && (
               <div className="card-loading-footer nodrag nopan" onPointerDown={e => e.stopPropagation()}>
                 <button className="card-stop-waiting" onClick={() => {
-                  void hostService.cancelWait(id).catch(error => {
+                  void behavior.onCancel!(id).catch(error => {
                     canvas.updateNodeData(id, { status: 'error', errorMessage: error.message });
                   });
                 }}>Stop waiting</button>

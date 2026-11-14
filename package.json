@@ -87,11 +87,11 @@
     }
   },
   "version": "0.1.0",
-  "description": "An interactive explanation canvas for local models and agent integrations.",
+  "description": "A local explanation tool and reusable interactive canvas UI.",
   "exports": {
     "./app": "./src/App.tsx",
     "./mount": "./src/main.tsx",
-    "./runtime": "./src/services/CanvasHost.ts",
-    "./*": "./*"
+    "./*": "./*",
+    "./canvas-behavior": "./src/canvas/behavior.tsx"
   }
 }

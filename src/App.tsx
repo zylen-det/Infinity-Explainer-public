@@ -3,7 +3,7 @@ import { DotsHorizontalMoreMenu, Download, FileUpload, Settings, Trash } from '@
 import { CardActionsContext } from './components/CardActionsContext'
 import { CanvasControls } from './components/CanvasControls'
 import { useSafeFloatingPosition } from './components/useSafeFloatingPosition'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Canvas, Background, CanvasProvider } from './canvas/Canvas'
 import { useCanvas } from './canvas/context'
 import type { Node as CanvasNode, Edge as CanvasEdge } from './canvas/store'
@@ -18,8 +18,7 @@ import { PersistenceService } from './services/PersistenceService'
 import { createSeedNode } from './core/seed'
 import { llmService } from './core/services'
 import type { LLMConfig } from './core/types'
-import { hostService, isHosted } from './services/CanvasHost'
-import { HostCanvas } from './components/HostCanvas'
+import { CanvasBehaviorContext, useCanvasBehavior, type CanvasBehavior } from './canvas/behavior'
 import { useReadingMode } from './reading/context'
 import { ReadingModeProvider, ReadingOverlay } from './reading/ReadingMode'
 
@@ -27,7 +26,10 @@ const nodeTypes = { explainer: ExplainerNode }
 const edgeTypes = { animatedEdge: AnimatedEdge }
 
 /** Card data and camera state live in the shared canvas store. */
-function InnerApp() {
+function InnerApp({ children }: { children?: ReactNode }) {
+  const behavior = useCanvasBehavior()
+  const localPersistence = behavior.persistence !== 'manual'
+  const modelSettings = behavior.modelSettings !== false
   const canvas = useCanvas()
   const reading = useReadingMode()
   const [showConfig, setShowConfig] = useState(false)
@@ -52,9 +54,9 @@ function InnerApp() {
 
   // ── Initialize from persistence or seed ──
   const [initial] = useState(() => {
-    const restored = isHosted ? null : PersistenceService.tryRestore()
+    const restored = localPersistence ? PersistenceService.tryRestore() : null
     const nodes = (restored?.nodes ?? []) as CanvasNode[]
-    if (!isHosted && !restored) nodes.push(createSeedNode() as unknown as CanvasNode)
+    if (localPersistence && !restored) nodes.push(createSeedNode() as unknown as CanvasNode)
     return { nodes, edges: (restored?.edges ?? []) as CanvasEdge[], viewport: restored?.viewport }
   })
 
@@ -62,7 +64,7 @@ function InnerApp() {
   const [, forceRender] = useState(0)
 
   useEffect(() => {
-    if (isHosted) return
+    if (!localPersistence) return
     const save = () => {
       PersistenceService.save(
         canvas.getNodes(),
@@ -75,11 +77,11 @@ function InnerApp() {
       clearInterval(interval)
       save()
     }
-  }, [canvas])
+  }, [canvas, localPersistence])
 
   // ── Import / Export ──
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [hostError, setHostError] = useState('')
+  const [actionError, setActionError] = useState('')
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
   const contextMenuRef = useRef<HTMLDivElement>(null)
   useSafeFloatingPosition(contextMenuRef, contextMenu?.x, contextMenu?.y)
@@ -126,10 +128,10 @@ function InnerApp() {
       data: { selection: selection.selection, startAnchorX: 1, startAnchorY: 0.5, endAnchorX: 0, endAnchorY: 0.5 },
     }])
     setContextMenu(null)
-    if (isHosted) void hostService.createBlock(id, source?.id ?? null, selection?.selection).catch(error => {
+    if (behavior.onCreateCard) void behavior.onCreateCard(id, source?.id ?? null, selection?.selection).catch(error => {
       canvas.setNodes(current => current.filter(node => node.id !== id))
       canvas.setEdges(current => current.filter(edge => edge.target !== id))
-      setHostError(error instanceof Error ? error.message : String(error))
+      setActionError(error instanceof Error ? error.message : String(error))
     })
     // Bring cards placed beyond the current viewport into view, then focus the card itself.
     requestAnimationFrame(() => {
@@ -137,7 +139,7 @@ function InnerApp() {
         duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200 })
       document.querySelector<HTMLElement>(`[data-node-id="${id}"]`)?.focus({ preventScroll: true })
     })
-  }, [canvas])
+  }, [canvas, behavior])
 
   const handleExport = useCallback(() => {
     const blob = PersistenceService.exportToBlob(
@@ -160,13 +162,12 @@ function InnerApp() {
     if (!file) return
     const reader = new FileReader()
     reader.onload = async () => {
-      if (isHosted) {
+      if (behavior.onImport) {
         try {
-          setHostError('')
-          await hostService.importCanvas(reader.result as string)
-          const layout = hostService.getSnapshot()?.layout
-          if (layout) await canvas.setViewport(layout.viewport)
-        } catch (error) { setHostError(error instanceof Error ? error.message : String(error)) }
+          setActionError('')
+          const imported = await behavior.onImport(reader.result as string)
+          if (imported.viewport) await canvas.setViewport(imported.viewport)
+        } catch (error) { setActionError(error instanceof Error ? error.message : String(error)) }
         return
       }
       const data = PersistenceService.importFromString(reader.result as string)
@@ -180,10 +181,10 @@ function InnerApp() {
         forceRender((n) => n + 1)
       }
     }
-    if (isHosted) reader.onerror = () => setHostError('無法讀取畫布檔案，請重新選擇。')
+    reader.onerror = () => setActionError('無法讀取畫布檔案，請重新選擇。')
     reader.readAsText(file)
     e.target.value = ''
-  }, [canvas])
+  }, [canvas, behavior])
 
   const handleClear = useCallback(() => {
     PersistenceService.clear()
@@ -228,15 +229,15 @@ function InnerApp() {
           onPaneContextMenu={event => { event.preventDefault(); setContextMenu({ x: event.clientX, y: event.clientY }) }}
           onMoveStart={() => setContextMenu(null)}
           deleteKeyCode={reading.activeId ? null : ['Backspace', 'Delete']}
-          onDelete={!isHosted ? ({ edges }) => {
+          onDelete={!behavior.onDelete ? ({ edges }) => {
             const detached = new Set(edges.map(edge => edge.target))
             canvas.setNodes(nodes => nodes.map(node => detached.has(node.id)
               ? { ...node, data: { ...node.data, parentId: null } } : node))
           } : undefined}
-          onBeforeDelete={isHosted ? async ({ nodes, edges }) => {
+          onBeforeDelete={behavior.onDelete ? async ({ nodes, edges }) => {
             try {
-              if (nodes.length || edges.length) await hostService.deleteBlocks(nodes.map(node => node.id), edges.map(edge => edge.target))
-            } catch (error) { setHostError(error instanceof Error ? error.message : String(error)) }
+              if (nodes.length || edges.length) await behavior.onDelete!(nodes.map(node => node.id), edges.map(edge => edge.target))
+            } catch (error) { setActionError(error instanceof Error ? error.message : String(error)) }
             return false
           } : undefined}
           edgesVisible={connectionsVisible && !reading.activeId}
@@ -255,7 +256,7 @@ function InnerApp() {
       {contextMenu && <div ref={contextMenuRef} role="menu" aria-label="Canvas actions" className="selection-popover canvas-context-menu">
         <button role="menuitem" onClick={() => handleAddCard(contextMenu)}>＋ Add card</button>
       </div>}
-      {isHosted && <HostCanvas />}
+      {children}
 
       <details className="canvas-menu">
         <summary aria-label="Canvas menu" title="Canvas menu"><DotsHorizontalMoreMenu /></summary>
@@ -270,8 +271,8 @@ function InnerApp() {
           <Button color="secondary" variant="ghost" block onClick={event => {
             event.currentTarget.closest('details')?.removeAttribute('open')
             setShowConfig(true)
-          }}><span className="menu-item-content"><Settings /><span>設定{!isHosted && ` · ${providerStatus.replace(/[⚫🟢] /gu, '')}`}</span></span></Button>
-          {!isHosted && <>
+          }}><span className="menu-item-content"><Settings /><span>設定{modelSettings && ` · ${providerStatus.replace(/[⚫🟢] /gu, '')}`}</span></span></Button>
+          {localPersistence && <>
           <div className="menu-divider" />
           <Button color="danger" variant="ghost" block onClick={handleClear}>
             <span className="menu-item-content"><Trash /><span>清除畫布並重新開始</span></span>
@@ -279,24 +280,26 @@ function InnerApp() {
           </>}
         </div>
       </details>
-      {isHosted && hostError && <button className="feedback-toast" role="alert" onClick={() => setHostError('')}>{hostError}</button>}
+      {actionError && <button className="feedback-toast" role="alert" onClick={() => setActionError('')}>{actionError}</button>}
 
       {showConfig && (
         <SettingsPage appearance={appearance} onAppearanceChange={handleAppearanceChange}
-          config={isHosted ? undefined : llmConfig} onSaveConfig={handleSaveConfig} onClose={() => setShowConfig(false)} />
+          config={modelSettings ? llmConfig : undefined} onSaveConfig={handleSaveConfig} onClose={() => setShowConfig(false)} />
       )}
     </div>
   )
 }
 
-function App() {
+function App({ behavior = {}, children }: { behavior?: CanvasBehavior; children?: ReactNode }) {
   const [target, setTarget] = useState<HTMLDivElement | null>(null)
   return (
+    <CanvasBehaviorContext value={behavior}>
     <CardActionsContext value={{ target, setTarget }}>
     <CanvasProvider>
-      <ReadingModeProvider><InnerApp /></ReadingModeProvider>
+      <ReadingModeProvider><InnerApp>{children}</InnerApp></ReadingModeProvider>
     </CanvasProvider>
     </CardActionsContext>
+    </CanvasBehaviorContext>
   )
 }
 

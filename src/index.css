@@ -2,13 +2,12 @@
 @import "@openai/apps-sdk-ui/css";
 @source "../node_modules/@openai/apps-sdk-ui";
 
-/* Host values include surrounding interface chrome; env() is only a fallback for device cutouts.
-   Do not add both: hosts may already include the device safe area in their value. */
+/* Device cutouts are local UI layout constraints. */
 :root {
-  --app-safe-top: var(--host-safe-top, env(safe-area-inset-top, 0px));
-  --app-safe-right: var(--host-safe-right, env(safe-area-inset-right, 0px));
-  --app-safe-bottom: var(--host-safe-bottom, env(safe-area-inset-bottom, 0px));
-  --app-safe-left: var(--host-safe-left, env(safe-area-inset-left, 0px));
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
 }
 
 html, body {
@@ -22,53 +21,6 @@ html, body {
 #root {
   width: 100vw;
   height: 100dvh;
-}
-
-.host-controls {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 1000;
-  display: flex;
-  gap: 8px;
-}
-
-.host-status {
-  box-sizing: border-box;
-  max-width: min(320px, calc(100vw - 120px));
-  max-height: 80px;
-  overflow: auto;
-  overflow-wrap: anywhere;
-  padding: 8px 12px;
-  border: 1px solid var(--card-border);
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--text);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.host-controls button {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 1px solid #dbe3ed;
-  border-radius: 999px;
-  background: #fffffff5;
-  color: #334155;
-  box-shadow: 0 4px 20px #0f172a0d;
-  cursor: pointer;
-}
-
-.host-controls button:hover {
-  background: #f1f5f9;
-}
-
-.host-controls button:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 3px;
 }
 
 @keyframes popOut {
@@ -104,7 +56,7 @@ html, body {
 
 /* Apps SDK UI semantic tokens also drive the canvas and custom content. */
 .app { --bg:var(--color-surface-secondary); --card:var(--color-surface); --card-border:var(--color-border); --text:var(--color-text); --secondary:var(--color-text-secondary); --muted:var(--color-text-tertiary); --float:var(--color-surface-elevated); --grid:var(--color-border-strong); position:fixed; inset:var(--app-safe-top) var(--app-safe-right) var(--app-safe-bottom) var(--app-safe-left); display:flex; flex-direction:column; color:var(--text); background:var(--bg); font-family:var(--font-sans); isolation:isolate; }
-/* Paint through host safe areas while keeping all interaction inside .app. */
+/* Paint through device safe areas while keeping all interaction inside .app. */
 .app::before { content:""; position:fixed; inset:0; z-index:-1; background:var(--bg); pointer-events:none; }
 /* Keep the canvas palette adjustment specific to dark mode. */
 [data-theme="dark"] .app { --bg:var(--gray-50); --card:var(--gray-200); }
@@ -156,9 +108,7 @@ button:focus-visible, .explainer-card:focus-visible { outline:2px solid var(--te
 .ask-actions { display:flex; justify-content:flex-end; gap:9px; }
 .ask-actions button,.feedback-toast { background:var(--card); border:1px solid var(--card-border); color:var(--text); border-radius:9px; padding:8px 12px; font-size:12px; }
 .feedback-toast { max-width:calc(100% - 40px); overflow-wrap:anywhere; position:absolute; z-index:60; bottom:20px; left:20px; }
-.host-controls { top:65px; }
-.host-controls button { background:var(--card); border-color:var(--card-border); color:var(--text); }
-.host-controls button:hover { background:var(--float); }
+
 .loading-spinner { border-color:var(--card-border); border-top-color:var(--text); }
 @media(max-width:700px) { .brand { font-size:10px; } .canvas-hint { display:none; } .wordlist { max-width:140px; } }
 @media(prefers-reduced-motion:reduce) { .animate-pop { animation:none; } .card-actions { transition:none; } }
@@ -282,9 +232,6 @@ button:focus-visible, .explainer-card:focus-visible { outline:2px solid var(--te
 .reading-minimap output { text-align:center; font-variant-numeric:tabular-nums; }
 @media(max-width:700px) { .reading-minimap { right:8px; width:64px; } }
 
-.reading-mode .host-controls { display:none; }
-
-
 .canvas-surface { flex:1; min-height:0; }
 .canvas-controls { position:absolute; max-width:calc(100% - 40px); z-index:40; right:20px; bottom:24px; display:flex; align-items:center; gap:12px; }
 .canvas-icon { background:var(--float); box-shadow:0 2px 8px #00000008; }
@@ -330,7 +277,7 @@ button:focus-visible, .explainer-card:focus-visible { outline:2px solid var(--te
 .markdown-content a { text-decoration:underline; }
 .markdown-content hr { margin:24px 0; border-color:var(--card-border); }
 .reading-mode .canvas-menu { display:none; }
-.host-controls { top:20px; right:20px; }
+
 @media(max-width:700px) {
   .canvas-controls { right:12px; bottom:16px; gap:8px; }
   .focus-navigation { top:calc(var(--app-safe-top) + 16px); right:calc(var(--app-safe-right) + 12px); }

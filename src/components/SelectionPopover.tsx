@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Chat, CloseBold, Copy, Plus } from '@openai/apps-sdk-ui/components/Icon'
 import { useSafeFloatingPosition } from './useSafeFloatingPosition'
 import { captureSelection, type SelectionAnchor } from '../core/selectionAnchor'
-import { hostService, isHosted } from '../services/CanvasHost'
+import { useCanvasBehavior } from '../canvas/behavior'
 
 export type CardSelection = { nodeId: string; text: string; x: number; y: number; selection: SelectionAnchor }
 type Selection = CardSelection
 
 export function SelectionPopover({ onAddCard }: { onAddCard: (selection: CardSelection) => void }) {
+  const behavior = useCanvasBehavior()
   const [selection, setSelection] = useState<Selection | null>(null)
   const [asking, setAsking] = useState(false)
   const [question, setQuestion] = useState('')
@@ -54,9 +55,9 @@ export function SelectionPopover({ onAddCard }: { onAddCard: (selection: CardSel
       <button aria-label="＋ Add card" onClick={() => { onAddCard(selection); setSelection(null); window.getSelection()?.removeAllRanges() }}><Plus aria-hidden="true" /><span>Add card</span></button>
       <button aria-label="↗ Explain" className="selection-explain" onClick={() => explain(selection)}><ArrowUpRight aria-hidden="true" /><span>Explain</span></button>
       <button aria-label="☷ Ask" onClick={() => {
-        if (!isHosted) { setAskSelection(selection); setAsking(true); return }
-        void hostService.stageQuestion(selection.nodeId, selection.text, selection.selection).then(() => {
-          setNotice('已選取「' + selection.text + '」。' + hostService.questionHint);
+        if (!behavior.onAsk) { setAskSelection(selection); setAsking(true); return }
+        void behavior.onAsk(selection.nodeId, selection.text, selection.selection).then(notice => {
+          setNotice(notice);
           setSelection(null); window.getSelection()?.removeAllRanges()
         }).catch(error => setError(error instanceof Error ? error.message : String(error)))
       }}><Chat aria-hidden="true" /><span>Ask</span></button>

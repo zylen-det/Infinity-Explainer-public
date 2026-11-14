@@ -1,5 +1,6 @@
 import { TermRegistry } from './TermRegistry'
-import { ExplanationService } from '../services/ExplanationService'
+import { LLMService } from '../services/LLMService'
+import type { ILLMService } from './types'
 
 /**
  * Global singleton for explainer services.
@@ -7,4 +8,4 @@ import { ExplanationService } from '../services/ExplanationService'
  * which avoids the $RefreshSig$ transform issue with custom hooks.
  */
 export const termRegistry = new TermRegistry()
-export const llmService = new ExplanationService()
+export const llmService: ILLMService = new LLMService()
