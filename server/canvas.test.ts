@@ -117,3 +117,42 @@ test('empty user cards persist alongside a pending answer and retain selection w
   await client.callTool({ name: 'delete_blocks', arguments: { boardId, ids: ['note', 'answer'] } })
   assert.deepEqual(new CanvasStore(dir).read(boardId).blocks, [], 'deleting every card persists an empty board')
 })
+
+test('rewrite a completed generated card without requestId and reject its late replies', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'infinity-rewrite-'))
+  const store = new CanvasStore(dir)
+  const server = createMcpServer(store, '<html></html>')
+  const client = new Client({ name: 'rewrite-test', version: '' })
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+  t.after(async () => { await client.close(); await server.close(); rmSync(dir, { recursive: true, force: true }) })
+  await server.connect(serverTransport)
+  await client.connect(clientTransport)
+  const boardId = store.create().boardId
+  const call = (name: string, args: object) => client.callTool({name, arguments:{boardId,...args}})
+  await call('write_block', {id:'root',parentId:null,title:'HTTPS',content:'HTTPS uses Encryption.',terms:['Encryption']})
+  const selection = {text:'Encryption',start:11,end:21,prefix:'HTTPS uses ',suffix:'.'}
+  await call('prepare_block', {id:'child',parentId:'root',title:'Encryption',requestId:'generation-one',selection})
+  const answer = {id:'child',parentId:'root',title:'Encryption',content:'Encryption protects transmitted data.',terms:['Encryption']}
+  assert.equal((await call('write_block',answer)).isError,true,'pending generation still requires its matching request')
+  assert.equal((await call('write_block',{...answer,requestId:'wrong-generation'})).isError,true)
+  assert.notEqual((await call('write_block',{...answer,requestId:'generation-one'})).isError,true)
+  assert.notEqual((await call('write_block',{...answer,requestId:'generation-one'})).isError,true,'completion retries remain valid before editing')
+  const layout = {boardId,cards:[{id:'child',position:{x:450,y:80},width:400,height:300}],viewport:{x:20,y:30,zoom:0.8}}
+  store.saveLayout(boardId,layout)
+
+  const rewritten = await call('write_block',{...answer,title:'HELLO WORLD',content:'HELLO WORLD',terms:[]})
+  assert.notEqual(rewritten.isError,true,'ordinary rewrites do not require the completed generation ID')
+  const saved = new CanvasStore(dir).read(boardId)
+  const child = saved.blocks.find(block=>block.id==='child')!
+  assert.equal(child.title,'HELLO WORLD')
+  assert.equal(child.content,'HELLO WORLD')
+  assert.equal(child.requestId,null,'an explicit rewrite retires the completed generation')
+  assert.equal(child.parentId,'root')
+  assert.deepEqual(child.selection,selection)
+  assert.deepEqual(saved.layout,layout)
+  assert.equal(saved.blocks.length,2)
+  assert.equal((await call('write_block',{...answer,requestId:'generation-one'})).isError,true,'a late generation must not overwrite the rewrite')
+  assert.equal((await call('write_block',{...answer,requestId:'invented-edit'})).isError,true,'an invented request does not become valid after editing')
+  assert.deepEqual(store.read(boardId),saved,'rejected writes do not alter content or revision')
+  assert.notEqual((await call('write_block',{...answer,title:'Second edit',content:'Second edit',terms:[]})).isError,true)
+})

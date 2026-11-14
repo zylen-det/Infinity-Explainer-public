@@ -74,7 +74,7 @@ export function createMcpServer(store: CanvasRepository, widgetHtml?: string, wi
 
   server.registerTool('write_block', {
     title: 'Write an explanation block',
-    description: 'Write your own generated answer into the canvas. Supply the complete content and clickable terms present in it. For a UI follow-up use its exact boardId, id, parentId and requestId. Use parentId:null for a root answer. Repeating the same ID updates that block without duplicating it. This is a data-only update to the already open canvas; do not call open_canvas after writing.',
+    description: 'Write your own generated answer into the canvas. Supply the complete content and clickable terms present in it. For a UI follow-up use its exact boardId, id, parentId and requestId. To rewrite a completed card, read_canvas to identify it, keep its id and parentId, and omit requestId: its earlier generation ID is not an editing credential. Never ask the user to supply an internal requestId. Use parentId:null for a root answer. Repeating the same ID updates that block without duplicating it. This is a data-only update to the already open canvas; do not call open_canvas after writing.',
     inputSchema: z.object({ boardId, id, parentId, title: z.string().trim().max(300), content: z.string().max(40000),
       terms: z.array(z.string().min(1).max(200)).max(80), selection, requestId: id.optional() }),
     outputSchema: canvasOutput, annotations, _meta: { ui: { visibility: ['app', 'model'] } },

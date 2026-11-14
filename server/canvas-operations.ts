@@ -29,7 +29,11 @@ export function writeBlock(board: CanvasSnapshot, block: BlockInput, requestId?:
   }
   const reserved = requestId ? board.blocks.find(b => b.requestId === requestId) : undefined
   if (reserved && reserved.id !== block.id) throw new Error('Reply must update its reserved block ID')
-  if (existing?.requestId && existing.requestId !== requestId) throw new Error('Stale or missing requestId')
+  // A request ID identifies a generation, not permission to edit a finished card.
+  // Ordinary rewrites retire that generation below; late replies must then fail
+  // even when the stored requestId has become null.
+  if (requestId !== undefined && existing?.requestId !== requestId) throw new Error('Stale requestId')
+  if (existing?.requestId && existing.status !== 'ready' && requestId === undefined) throw new Error('Stale or missing requestId')
   if (existing && existing.parentId !== block.parentId) throw new Error('Cannot change a block parent')
   return upsert(board, { ...block, ...(existing?.userTerms ? { userTerms: existing.userTerms } : {}),
     ...(block.selection ?? existing?.selection ? { selection: block.selection ?? existing?.selection } : {}), status: 'ready', requestId: requestId ?? null, error: '' })
